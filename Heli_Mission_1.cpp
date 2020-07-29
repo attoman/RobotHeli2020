@@ -198,7 +198,7 @@ void* udp_thread(void* thread_id)
     while (1)
     {
         missionLen = sizeof(mission_socket);
-        if ((recvLen = recvfrom(socket_Local_flag, packet_xavier2mission, XAVIER2MISSION_PacketSize - 1, 0, (struct sockaddr*)&mission_socket, &missionLen)) == -1) {
+        if ((recvLen = recvfrom(socket_Local_flag, packet_xavier2mission, XAVIER2MISSION_PacketSize - 1, 0, (sockaddr*)&mission_socket, &missionLen)) == -1) {
             perror("recvfrom failed");
             exit(1);
         }
