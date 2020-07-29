@@ -18,12 +18,14 @@
 #define XAVIER2MISSION_PacketSize 9
 #define MISSION2FCS_PacketSize 17
 
+
+char packet_xavier2mission[XAVIER2MISSION_PacketSize];
+
 int fd0;
 int socket_Local_flag;
 int port_xavier2mission = 44666;
 struct sockaddr_in mission_socket;
 struct sockaddr_in unity_socket;
-char packet_xavier2mission[XAVIER2MISSION_PacketSize];
 int dgc_serial_setparams(int fd, int baudrate, char parity);
 long int dgc_serial_bytes_available(int fd);
 int dgc_serial_clear_input_buffer(int fd);
@@ -34,6 +36,9 @@ void udp_init();
 int udp_thread_gen();
 void* udp_thread(void* thread_id);
 void Serial_init(int fd);
+int serial2fcs_thread_gen();
+void* udp_thread(void* thread_id);
+
 socklen_t missionLen;
 uint32_t HumanX;
 uint32_t HumanY;
