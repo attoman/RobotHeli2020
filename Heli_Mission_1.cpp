@@ -33,7 +33,7 @@ int baudcode(int baudrate);
 void udp_init();
 int udp_thread_gen();
 void* udp_thread(void* thread_id);
-void Serial_init();
+void Serial_init(fd);
 socklen_t missionLen;
 uint32_t HumanX;
 uint32_t HumanY;
@@ -164,7 +164,7 @@ int udp_thread_gen()
     pthread_t M_P_1_thread;
     const char* message_udp = "UDP Thread";
     co_thr = pthread_create(&M_P_1_thread, NULL, udp_thread, (void*)message_udp);
-    return co_thr
+    return co_thr;
 }
 
 int serial2fcs_thread_gen()
@@ -173,7 +173,7 @@ int serial2fcs_thread_gen()
     pthread_t M_P_1_thread;
     const char* message_udp = "FCS Protocol Thread";
     co_thr = pthread_create(&M_P_1_thread, NULL, fcsprotocol_thread, (void*)message_udp);
-    return co_thr
+    return co_thr;
 }
 
 void* fcsprotocol_thread(void* thread_id)
