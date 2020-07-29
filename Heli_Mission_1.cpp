@@ -33,7 +33,7 @@ int baudcode(int baudrate);
 void udp_init();
 int udp_thread_gen();
 void* udp_thread(void* thread_id);
-void Serial_init(fd);
+void Serial_init(int fd);
 socklen_t missionLen;
 uint32_t HumanX;
 uint32_t HumanY;
@@ -122,7 +122,7 @@ void udp_init()
     }
 }
 
-void Serial_init(fd)
+void Serial_init(int fd)
 {
     //struct termios term;
     struct serial_struct serial;
