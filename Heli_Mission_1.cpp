@@ -40,7 +40,7 @@ void Serial_init(int fd);
 int serial2fcs_thread_gen();
 void* fcsprotocol_thread(void* thread_id);
 
-socklen_t missionLen;
+int missionLen;
 uint32_t HumanX;
 uint32_t HumanY;
 struct termios term0;
@@ -74,6 +74,7 @@ using namespace std;
 
 int main()
 {
+    missionLen = sizeof(mission_socket);
     socket_Local_flag = -1;
     int udp_flag = -1;
     int fcsprotocol_flag = -1;
@@ -198,7 +199,7 @@ void* udp_thread(void* thread_id)
     while (1)
     {
         missionLen = sizeof(mission_socket);
-        if ((recvLen = recvfrom(socket_Local_flag, packet_xavier2mission, XAVIER2MISSION_PacketSize - 1, 0, (sockaddr*)&mission_socket, &missionLen)) == -1) {
+        if ((recvLen = recvfrom(socket_Local_flag, packet_xavier2mission, XAVIER2MISSION_PacketSize - 1, 0, (sockaddr*)&mission_socket, (socklen_t*)&missionLen)) == -1) {
             perror("recvfrom failed");
             exit(1);
         }
