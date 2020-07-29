@@ -15,6 +15,13 @@
 #include <stdint.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <SerialStream.h>
+#include <algorithm>
+#include <SerialPort.h>
+
+
 
 #define XAVIER2MISSION_PacketSize 9
 #define MISSION2FCS_PacketSize 17
