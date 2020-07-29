@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <stdint.h>
 #include <netinet/in.h>
+#include <string.h>
 
 #define XAVIER2MISSION_PacketSize 9
 #define MISSION2FCS_PacketSize 17
