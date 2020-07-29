@@ -119,7 +119,7 @@ void udp_init()
     mission_socket.sin_addr.s_addr = INADDR_ANY;
     mission_socket.sin_port = htons(port_xavier2mission);
 
-    if (bind(socket_Local_flag, (struct mission_socket*)&mission_socket, sizeof(mission_socket)) == -1)
+    if (bind(socket_Local_flag, (struct sockaddr*)&mission_socket, sizeof(mission_socket)) == -1)
     {
         printf("Bind error\n");
     }
