@@ -74,6 +74,7 @@ using namespace std;
 
 int main()
 {
+    socket_Local_flag = -1;
     int udp_flag = -1;
     int fcsprotocol_flag = -1;
     udp_init();
