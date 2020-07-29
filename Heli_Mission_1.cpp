@@ -38,7 +38,7 @@ int udp_thread_gen();
 void* udp_thread(void* thread_id);
 void Serial_init(int fd);
 int serial2fcs_thread_gen();
-void* udp_thread(void* thread_id);
+void* fcsprotocol_thread(void* thread_id);
 
 socklen_t missionLen;
 uint32_t HumanX;
