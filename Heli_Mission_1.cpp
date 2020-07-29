@@ -103,7 +103,7 @@ void udp_init()
     int rec;
     int clientAddr;
     socket_Local_flag = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (hServerSock == -1)
+    if (socket_Local_flag == -1)
     {
         fprintf(stderr, "socket() failed");
         exit(1);
