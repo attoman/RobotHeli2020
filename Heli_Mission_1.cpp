@@ -23,15 +23,20 @@
 
 
 
-#define XAVIER2MISSION_PacketSize 9
+#define DEEPSTREAM2MISSION_PacketSize 9
 #define MISSION2FCS_PacketSize 17
+//  수정 요망
+#define XAVIER2UNITY_PacketSize 10
+#define UNITY2XAVIER_PacketSize 10
 
-
-char packet_xavier2mission[XAVIER2MISSION_PacketSize];
+char packet_deepstream2mission[DEEPSTREAM2MISSION_PacketSize];
+char packet_xavier2unity[XAVIER2UNITY_PacketSize];
+char packet_unity2xavier[UNITY2XAVIER_PacketSize];
 
 int fd0;
-int socket_Local_flag;
-int port_xavier2mission = 44666;
+int socket_Xavier_flag;
+int port_deepstream2mission = 44666;
+int port_xavier2unity = 55777;
 struct sockaddr_in mission_socket;
 struct sockaddr_in unity_socket;
 int dgc_serial_setparams(int fd, int baudrate, char parity);
@@ -41,8 +46,10 @@ int dgc_serial_writen(int fd, unsigned char* buffer, int n, double timeout);
 int dgc_serial_readn(int fd, unsigned char* buffer, int n, double timeout);
 int baudcode(int baudrate);
 void udp_init();
-int udp_thread_gen();
-void* udp_thread(void* thread_id);
+int udp_Local_thread_gen();
+int udp_X2U_thread_gen();
+int udp_U2X_thread_gen();
+void* udp_Local_thread(void* thread_id);
 void Serial_init(int fd);
 int serial2fcs_thread_gen();
 void* fcsprotocol_thread(void* thread_id);
@@ -64,6 +71,16 @@ static struct Mission_Tracker_Output
 
 }Mission_Tracker_Output;
 
+static struct Unity2Xavier_Data
+{
+    uint16_t Centerpoint_X;
+    uint16_t Centerpoint_Y;
+    uint16_t Box_width;
+    uint16_t Box_height;
+    uint8_t Class_number;
+
+}U2XData;
+
 #pragma pack(push, 1)
 unsigned char packet_mission2FCS[MISSION2FCS_PacketSize];
 struct UARTXavierSendBuffer
@@ -82,8 +99,10 @@ using namespace std;
 
 int main()
 {
+	unityLen = sizeof(unity_socket)
     missionLen = sizeof(mission_socket);
-    socket_Local_flag = -1;
+    socket_Xavier_flag = -1;
+    socket_Unity_flag = -1;
     int udp_flag = -1;
     int fcsprotocol_flag = -1;
     udp_init();
@@ -113,8 +132,8 @@ void udp_init()
 {
     int rec;
     int clientAddr;
-    socket_Local_flag = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (socket_Local_flag == -1)
+    socket_Xavier_flag = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (socket_Xavier_flag == -1)
     {
         fprintf(stderr, "socket() failed");
         exit(1);
@@ -123,14 +142,33 @@ void udp_init()
     {
         printf("Socket open!!!!");
     }
+
+	
     memset(&mission_socket, 0, sizeof(mission_socket));
     mission_socket.sin_family = AF_INET;
-    mission_socket.sin_addr.s_addr = INADDR_ANY;
-    mission_socket.sin_port = htons(port_xavier2mission);
-
-    if (bind(socket_Local_flag, (struct sockaddr*)&mission_socket, sizeof(mission_socket)) == -1)
+    //mission_socket.sin_addr.s_addr = INADDR_ANY;
+    mission_socket.sin_addr.s_addr = inet_addr("127.0.0.1");
+    mission_socket.sin_port = htons(port_deepstream2mission);
+	
+    memset(&unity_socket, 0, sizeof(unity_socket));
+    unity_socket.sin_family = AF_INET;
+    //unity_socket.sin_addr.s_addr = INADDR_ANY;
+	//  UNITY PC 주소 입력 필요.
+    unity_socket.sin_addr.s_addr = inet_addr("127.0.0.1");
+    unity_socket.sin_port = htons(port_xavier2unity);
+	
+    if (bind(socket_Xavier_flag, (struct sockaddr*)&mission_socket, sizeof(mission_socket)) == -1)
     {
-        printf("Bind error\n");
+        printf("Local socket Bind error\n");
+    }
+    else
+    {
+        //Coding Rule
+    }
+
+    if (bind(socket_Xavier_flag, (struct sockaddr*)&unity_socket, sizeof(unity_socket)) == -1)
+    {
+        printf("Unity socket Bind error\n");
     }
     else
     {
@@ -174,19 +212,37 @@ void Serial_init(int fd)
 }
 
 
-int udp_thread_gen()
+int udp_Local_thread_gen()
 {
     int co_thr;
     pthread_t M_P_1_thread;
-    const char* message_udp = "UDP Thread";
-    co_thr = pthread_create(&M_P_1_thread, NULL, udp_thread, (void*)message_udp);
+    const char* message_udp = "Local UDP Thread";
+    co_thr = pthread_create(&M_P_1_thread, NULL, udp_Local_thread, (void*)message_udp);
+    return co_thr;
+}
+
+int udp_U2X_thread_gen()
+{
+    int co_thr;
+    pthread_t M_P_1_thread;
+    const char* message_udp = "X2U UDP Thread";
+    co_thr = pthread_create(&M_P_1_thread, NULL, udp_U2X_thread, (void*)message_udp);
+    return co_thr;
+}
+
+int udp_X2U_thread_gen()
+{
+    int co_thr;
+    pthread_t M_P_1_thread;
+    const char* message_udp = "X2U UDP Thread";
+    co_thr = pthread_create(&M_P_1_thread, NULL, udp_X2U_thread, (void*)message_udp);
     return co_thr;
 }
 
 int serial2fcs_thread_gen()
 {
     int co_thr;
-    pthread_t M_P_1_thread;
+    pthread_t M_P_3_thread;
     const char* message_udp = "FCS Protocol Thread";
     co_thr = pthread_create(&M_P_1_thread, NULL, fcsprotocol_thread, (void*)message_udp);
     return co_thr;
@@ -202,24 +258,50 @@ void* fcsprotocol_thread(void* thread_id)
     }
 }
 
-void* udp_thread(void* thread_id)
+void* udp_Local_thread(void* thread_id)
 {
     while (1)
     {
         missionLen = sizeof(mission_socket);
-        if ((recvFlag = recvfrom(socket_Local_flag, packet_xavier2mission, XAVIER2MISSION_PacketSize - 1, 0, (sockaddr*)&mission_socket, (socklen_t*)&missionLen)) == -1) {
+        if ((recvFlag = recvfrom(socket_Xavier_flag, packet_deepstream2mission, DEEPSTREAM2MISSION_PacketSize - 1, 0, (sockaddr*)&mission_socket, (socklen_t*)&missionLen)) == -1) {
             perror("recvfrom failed");
             exit(1);
         }
         else
         {
-            printf("Receive Complete");
+            printf("Receive Complete\n");
         }
-        memcpy(&Mission_Tracker_Output, &packet_xavier2mission, sizeof(struct Mission_Tracker_Output));
+
+    	
+        memcpy(&Mission_Tracker_Output, &packet_deepstream2mission, sizeof(struct Mission_Tracker_Output));
     }
 }
 
+void* udp_U2X_thread(void* thread_id)
+{
+    while (1)
+    {
+        unityLen = sizeof(unity_socket);
+        if ((recvFlag = recvfrom(socket_Xavier_flag, packet_unity2xavier, UNITY2XAVIER_PacketSize - 1, 0, (sockaddr*)&unity_socket, (socklen_t*)&unityLen)) == -1) {
+            perror("recvfrom failed");
+            exit(1);
+        }
+        else
+        {
+            printf("Receive Complete\n");
+        }
 
+        memcpy(&U2XData, &packet_unity2xavier, sizeof(struct Unity2Xavier_Data));
+    }
+}
+
+void* udp_X2U_thread(void* thread_id)
+{
+    while (1)
+    {
+        int a = 0;
+    }
+}
 
 
 int baudcode(int baudrate) {
